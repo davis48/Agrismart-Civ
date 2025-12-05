@@ -67,15 +67,15 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 lg:px-6">
+    <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 lg:px-6">
       {/* Left section */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 lg:hidden"
+          className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 lg:hidden"
           aria-label="Toggle menu"
         >
-          <Menu className="h-5 w-5 text-gray-600" />
+          <Menu className="h-5 w-5 text-gray-600 dark:text-gray-300" />
         </button>
 
         {/* Search */}
@@ -87,7 +87,7 @@ export function Header() {
               placeholder="Rechercher..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="h-10 w-64 rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+              className="h-10 w-64 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 dark:text-white pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
             />
           </div>
         </form>
@@ -95,7 +95,7 @@ export function Header() {
         {/* Mobile search toggle */}
         <button
           onClick={() => setShowSearch(!showSearch)}
-          className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 md:hidden"
+          className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 md:hidden"
           aria-label="Toggle search"
         >
           <Search className="h-5 w-5 text-gray-600" />
@@ -131,21 +131,21 @@ export function Header() {
         {/* Theme toggle */}
         <button
           onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100"
+          className="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
         >
           {theme === 'light' ? (
-            <Moon className="h-5 w-5 text-gray-600" />
+            <Moon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           ) : (
-            <Sun className="h-5 w-5 text-gray-600" />
+            <Sun className="h-5 w-5 text-yellow-500" />
           )}
         </button>
 
         {/* Notifications */}
         <Link
           href="/alertes"
-          className="relative flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100"
+          className="relative flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
         >
-          <Bell className="h-5 w-5 text-gray-600" />
+          <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
           {unreadCount > 0 && (
             <Badge
               variant="danger"
@@ -158,7 +158,7 @@ export function Header() {
 
         {/* User menu */}
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100">
+          <DropdownMenuTrigger className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
             <Avatar className="h-8 w-8">
               <AvatarImage src="" />
               <AvatarFallback>
@@ -166,34 +166,34 @@ export function Header() {
               </AvatarFallback>
             </Avatar>
             <div className="hidden md:block text-left">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 {user ? `${user.prenom || user.prenoms || ''} ${user.nom}` : 'Utilisateur'}
               </p>
-              <p className="text-xs text-gray-500 capitalize">
+              <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
                 {user?.role || 'Producteur'}
               </p>
             </div>
             <ChevronDown className="hidden md:block h-4 w-4 text-gray-400" />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Mon compte</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+          <DropdownMenuContent align="end" className="w-56 dark:bg-gray-800 dark:border-gray-700">
+            <DropdownMenuLabel className="dark:text-gray-200">Mon compte</DropdownMenuLabel>
+            <DropdownMenuSeparator className="dark:bg-gray-700" />
+            <DropdownMenuItem asChild className="dark:text-gray-300 dark:focus:bg-gray-700">
               <Link href="/profil" className="flex items-center gap-2 cursor-pointer">
                 <User className="h-4 w-4" />
                 <span>Profil</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
+            <DropdownMenuItem asChild className="dark:text-gray-300 dark:focus:bg-gray-700">
               <Link href="/settings" className="flex items-center gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
                 <span>Paramètres</span>
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="dark:bg-gray-700" />
             <DropdownMenuItem
               onClick={handleLogout}
-              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+              className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:text-red-400 dark:focus:text-red-400 dark:focus:bg-red-900/20"
             >
               <LogOut className="h-4 w-4 mr-2" />
               <span>Déconnexion</span>
@@ -204,7 +204,7 @@ export function Header() {
 
       {/* Mobile search overlay */}
       {showSearch && (
-        <div className="absolute inset-x-0 top-full bg-white border-b border-gray-200 p-4 md:hidden">
+        <div className="absolute inset-x-0 top-full bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 md:hidden">
           <form onSubmit={handleSearch}>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -214,7 +214,7 @@ export function Header() {
                 placeholder="Rechercher..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-4 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+                className="h-10 w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 pl-10 pr-4 text-sm dark:text-gray-200 focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
               />
             </div>
           </form>

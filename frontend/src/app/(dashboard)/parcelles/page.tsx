@@ -116,12 +116,14 @@ export default function ParcellesPage() {
             Gérez vos parcelles agricoles et suivez leur état
           </p>
         </div>
-        <Link href="/parcelles/new">
-          <Button className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle parcelle
-          </Button>
-        </Link>
+        {parcelles.length > 0 && (
+          <Link href="/parcelles/new">
+            <Button className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle parcelle
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Search and filter */}

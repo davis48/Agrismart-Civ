@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Sidebar, Header, BottomNav } from '@/components/layout'
-import { useAuthStore } from '@/lib/store'
+import { useAuthStore, useUIStore } from '@/lib/store'
 import { LoadingOverlay } from '@/components/ui'
 
 export default function DashboardLayout({
@@ -13,11 +13,24 @@ export default function DashboardLayout({
 }) {
   const router = useRouter()
   const { isAuthenticated, isLoading, token } = useAuthStore()
+  const { theme } = useUIStore()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Appliquer le thème au document
+  useEffect(() => {
+    if (mounted) {
+      const root = document.documentElement
+      if (theme === 'dark') {
+        root.classList.add('dark')
+      } else {
+        root.classList.remove('dark')
+      }
+    }
+  }, [theme, mounted])
 
   useEffect(() => {
     if (mounted && !isLoading) {
@@ -35,7 +48,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
       <Sidebar />
 
@@ -45,7 +58,7 @@ export default function DashboardLayout({
         <Header />
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+        <main className="flex-1 overflow-y-auto pb-16 lg:pb-0 dark:bg-gray-900">
           <div className="container mx-auto px-4 py-6 lg:px-6">
             {children}
           </div>
