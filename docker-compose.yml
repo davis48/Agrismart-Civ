@@ -1,7 +1,9 @@
 version: '3.8'
 
 services:
+  # ============================
   # Base de données PostgreSQL
+  # ============================
   postgres:
     image: postgres:15-alpine
     container_name: agrismart_postgres
@@ -12,6 +14,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-agrismart_secure_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     ports:
       - "${DB_PORT:-5432}:5432"
     healthcheck:
@@ -22,7 +25,9 @@ services:
     networks:
       - agrismart_network
 
+  # ============================
   # Cache Redis
+  # ============================
   redis:
     image: redis:7-alpine
     container_name: agrismart_redis
@@ -33,14 +38,59 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_secure_password}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - agrismart_network
 
-  # Backend API
+  # ============================
+  # InfluxDB (pour IoT)
+  # ============================
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: agrismart_influxdb
+    restart: unless-stopped
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USER:-agrismart}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD:-influx_secure_password}
+      DOCKER_INFLUXDB_INIT_ORG: agrismart
+      DOCKER_INFLUXDB_INIT_BUCKET: sensors
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:-my-super-secret-influxdb-token}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    ports:
+      - "${INFLUXDB_PORT:-8086}:8086"
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agrismart_network
+
+  # ============================
+  # Mosquitto MQTT Broker
+  # ============================
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: agrismart_mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./iot_service/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_logs:/mosquitto/log
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    networks:
+      - agrismart_network
+
+  # ============================
+  # Backend API (Node.js)
+  # ============================
   api:
     build:
       context: ./backend
@@ -73,6 +123,10 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secret-refresh-key-change-in-production}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-30d}
+      
+      # Services internes
+      AI_SERVICE_URL: http://ai_service:5000
+      IOT_SERVICE_URL: http://iot_service:4000
     ports:
       - "3000:3000"
     volumes:
@@ -85,27 +139,131 @@ services:
     networks:
       - agrismart_network
 
-  # Frontend Next.js
+  # ============================
+  # AI Service (Flask/TensorFlow)
+  # ============================
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    container_name: agrismart_ai
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: ${NODE_ENV:-production}
+      PORT: 5000
+      MODEL_PATH: /app/models
+      USE_GPU: ${USE_GPU:-false}
+    ports:
+      - "5000:5000"
+    volumes:
+      - ai_models:/app/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - agrismart_network
+    profiles:
+      - full
+
+  # ============================
+  # IoT Service (Node.js/MQTT)
+  # ============================
+  iot_service:
+    build:
+      context: ./iot_service
+      dockerfile: Dockerfile
+    container_name: agrismart_iot
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+      - mosquitto
+      - redis
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4000
+      
+      # MQTT
+      MQTT_BROKER_URL: mqtt://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-agrismart}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-mqtt_secure_password}
+      
+      # InfluxDB
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-my-super-secret-influxdb-token}
+      INFLUXDB_ORG: agrismart
+      INFLUXDB_BUCKET: sensors
+      
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_secure_password}
+      
+      # Backend API
+      BACKEND_API_URL: http://api:3000/api
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - agrismart_network
+    profiles:
+      - full
+      - iot
+
+  # ============================
+  # Frontend (Next.js)
+  # ============================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://api:3000/api/v1
-        NEXT_PUBLIC_SOCKET_URL: http://api:3000
+        NEXT_PUBLIC_API_URL: http://localhost:3000/api
+        NEXT_PUBLIC_SOCKET_URL: http://localhost:3000
+        NEXT_PUBLIC_AI_SERVICE_URL: http://localhost:5000
     container_name: agrismart_frontend
     restart: unless-stopped
     depends_on:
-      api:
-        condition: service_healthy
+      - api
     environment:
       NODE_ENV: production
     ports:
       - "3001:3000"
     networks:
       - agrismart_network
+    profiles:
+      - full
+      - web
 
-  # Nginx Reverse Proxy (optionnel pour production)
+  # ============================
+  # PgAdmin (Dev only)
+  # ============================
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: agrismart_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@agrismart.ci}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - agrismart_network
+    profiles:
+      - dev
+
+  # ============================
+  # Nginx Reverse Proxy (Production)
+  # ============================
   nginx:
     image: nginx:alpine
     container_name: agrismart_nginx
@@ -124,11 +282,30 @@ services:
     profiles:
       - production
 
+# ============================
+# Networks
+# ============================
 networks:
   agrismart_network:
     driver: bridge
 
+# ============================
+# Volumes
+# ============================
 volumes:
   postgres_data:
+    name: agrismart_postgres_data
   redis_data:
+    name: agrismart_redis_data
+  influxdb_data:
+    name: agrismart_influxdb_data
+  mosquitto_data:
+    name: agrismart_mosquitto_data
+  mosquitto_logs:
+    name: agrismart_mosquitto_logs
   uploads_data:
+    name: agrismart_uploads
+  ai_models:
+    name: agrismart_ai_models
+  pgadmin_data:
+    name: agrismart_pgadmin_data
