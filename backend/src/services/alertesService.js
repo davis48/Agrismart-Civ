@@ -21,7 +21,7 @@ exports.checkThresholds = async (capteurId, valeur) => {
     // Récupérer les informations du capteur
     const capteurResult = await db.query(
       `SELECT c.id, c.type, c.config, s.nom as station_nom, s.parcelle_id,
-              p.nom as parcelle_nom, p.proprietaire_id
+              p.nom as parcelle_nom, p.user_id
        FROM capteurs c
        JOIN stations s ON c.station_id = s.id
        JOIN parcelles p ON s.parcelle_id = p.id
@@ -87,7 +87,7 @@ exports.checkThresholds = async (capteurId, valeur) => {
         `INSERT INTO alertes (user_id, parcelle_id, capteur_id, type, niveau, titre, message, source)
          VALUES ($1, $2, $3, $4, $5, $6, $7, 'automatique')
          RETURNING *`,
-        [capteur.proprietaire_id, capteur.parcelle_id, capteurId, 
+        [capteur.user_id, capteur.parcelle_id, capteurId, 
          alerte.type, alerte.niveau, alerte.titre, alerte.message]
       );
 
@@ -95,7 +95,7 @@ exports.checkThresholds = async (capteurId, valeur) => {
 
       // Envoyer les notifications
       try {
-        await notificationService.sendAlert(capteur.proprietaire_id, {
+        await notificationService.sendAlert(capteur.user_id, {
           ...createdAlerte,
           parcelle_nom: capteur.parcelle_nom
         });
@@ -161,7 +161,7 @@ exports.checkOfflineSensors = async () => {
     // Capteurs qui n'ont pas envoyé de données depuis 30 minutes
     const offlineResult = await db.query(
       `SELECT c.id, c.type, s.nom as station_nom, s.parcelle_id,
-              p.nom as parcelle_nom, p.proprietaire_id, c.derniere_mesure
+              p.nom as parcelle_nom, p.user_id, c.derniere_mesure
        FROM capteurs c
        JOIN stations s ON c.station_id = s.id
        JOIN parcelles p ON s.parcelle_id = p.id
@@ -180,7 +180,7 @@ exports.checkOfflineSensors = async () => {
          VALUES ($1, $2, $3, 'systeme', 'warning', $4, $5, 'automatique')
          RETURNING *`,
         [
-          capteur.proprietaire_id,
+          capteur.user_id,
           capteur.parcelle_id,
           capteur.id,
           `Capteur hors ligne: ${capteur.type}`,
@@ -189,7 +189,7 @@ exports.checkOfflineSensors = async () => {
       );
 
       // Notifier
-      await notificationService.sendAlert(capteur.proprietaire_id, {
+      await notificationService.sendAlert(capteur.user_id, {
         ...alerte.rows[0],
         parcelle_nom: capteur.parcelle_nom
       });

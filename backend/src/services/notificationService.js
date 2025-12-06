@@ -121,7 +121,7 @@ exports.sendToParcelleOwner = async (parcelleId, titre, message, niveau = 'info'
     const parcelleResult = await db.query(
       `SELECT p.id, p.nom, u.id as user_id, u.email, u.telephone, u.nom as user_nom
        FROM parcelles p
-       JOIN users u ON p.proprietaire_id = u.id
+       JOIN users u ON p.user_id = u.id
        WHERE p.id = $1`,
       [parcelleId]
     );

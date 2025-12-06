@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Leaf, User, Phone, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, MapPin, CheckCircle } from 'lucide-react'
+import { Leaf, User, Phone, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, MapPin, CheckCircle, Home } from 'lucide-react'
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, CardDescription, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui'
 import { authApi } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
@@ -137,6 +137,15 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-4 py-8">
+      {/* Bouton retour accueil */}
+      <Link 
+        href="/" 
+        className="absolute top-4 left-4 flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
+      >
+        <Home className="h-5 w-5" />
+        <span className="text-sm font-medium">Accueil</span>
+      </Link>
+
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8">
         <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-600 shadow-lg">

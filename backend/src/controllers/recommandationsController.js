@@ -7,6 +7,7 @@ const db = require('../config/database');
 const { errors } = require('../middlewares/errorHandler');
 const { ROLES } = require('../middlewares/rbac');
 const logger = require('../utils/logger');
+const axios = require('axios');
 
 exports.getAll = async (req, res, next) => {
   try {
@@ -66,7 +67,7 @@ exports.getActive = async (req, res, next) => {
     const params = [];
 
     if (req.user.role === ROLES.PRODUCTEUR) {
-      query += ` AND p.proprietaire_id = $1`;
+      query += ` AND p.user_id = $1`;
       params.push(req.user.id);
     }
 
@@ -85,8 +86,8 @@ exports.getActive = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const { type, titre, contenu, priorite = 'moyenne', parcelle_id, 
-            culture_id, date_debut, date_fin } = req.body;
+    const { type, titre, contenu, priorite = 'moyenne', parcelle_id,
+      culture_id, date_debut, date_fin } = req.body;
 
     const result = await db.query(
       `INSERT INTO recommandations (type, titre, contenu, priorite, parcelle_id, 
@@ -185,10 +186,10 @@ exports.updateStatus = async (req, res, next) => {
       throw errors.notFound('Recommandation non trouvée');
     }
 
-    logger.audit('Mise à jour statut recommandation', { 
-      userId: req.user.id, 
-      recommandationId: id, 
-      statut 
+    logger.audit('Mise à jour statut recommandation', {
+      userId: req.user.id,
+      recommandationId: id,
+      statut
     });
 
     res.json({
@@ -242,7 +243,7 @@ exports.getIrrigationPrevisions = async (req, res, next) => {
     const params = [];
 
     if (req.user.role === ROLES.PRODUCTEUR) {
-      query += ` AND p.proprietaire_id = $1`;
+      query += ` AND p.user_id = $1`;
       params.push(req.user.id);
     }
 
@@ -252,7 +253,7 @@ exports.getIrrigationPrevisions = async (req, res, next) => {
     const previsions = result.rows.map(parcelle => {
       const humidite = parcelle.humidite_sol || 50;
       const temperature = parcelle.temperature || 25;
-      
+
       let besoin = 'faible';
       let quantite_recommandee = 0;
       let prochaine_irrigation = null;
@@ -328,9 +329,19 @@ exports.calculateIrrigation = async (req, res, next) => {
   try {
     const { parcelle_id } = req.body;
 
-    // Récupérer les données de la parcelle
+    // Récupérer les données de la parcelle et les dernières mesures
     const parcelleResult = await db.query(
-      `SELECT p.*, pl.culture_id, c.nom as culture_nom
+      `SELECT p.*, pl.culture_id, c.nom as culture_nom,
+              (SELECT valeur FROM mesures m 
+               JOIN capteurs cap ON m.capteur_id = cap.id 
+               JOIN stations s ON cap.station_id = s.id 
+               WHERE s.parcelle_id = p.id AND cap.type = 'humidite_sol'
+               ORDER BY m.timestamp DESC LIMIT 1) as humidite_sol,
+              (SELECT valeur FROM mesures m 
+               JOIN capteurs cap ON m.capteur_id = cap.id 
+               JOIN stations s ON cap.station_id = s.id 
+               WHERE s.parcelle_id = p.id AND cap.type = 'temperature'
+               ORDER BY m.timestamp DESC LIMIT 1) as temperature
        FROM parcelles p
        LEFT JOIN plantations pl ON p.id = pl.parcelle_id AND pl.statut = 'active'
        LEFT JOIN cultures c ON pl.culture_id = c.id
@@ -344,14 +355,37 @@ exports.calculateIrrigation = async (req, res, next) => {
 
     const parcelle = parcelleResult.rows[0];
 
+    // Appel au microservice IA Python
+    let quantiteRecommandee = 0;
+    let nextIrrigation = 'Inconnu';
+
+    try {
+      const aiResponse = await axios.post('http://localhost:5000/predict/irrigation', {
+        temperature: parcelle.temperature || 25,
+        humidity: 60, // Valeur par défaut si pas de capteur
+        soil_moisture: parcelle.humidite_sol || 50,
+        crop_type: 1 // ID par défaut
+      });
+
+      quantiteRecommandee = aiResponse.data.water_amount_mm;
+      nextIrrigation = aiResponse.data.next_irrigation;
+    } catch (aiError) {
+      logger.error('Erreur service IA Irrigation', { error: aiError.message });
+      // Fallback logic
+      quantiteRecommandee = (30 - (parcelle.humidite_sol || 50)) * 0.5;
+      if (quantiteRecommandee < 0) quantiteRecommandee = 0;
+    }
+
+    const litresTotal = Math.round(quantiteRecommandee * parcelle.superficie);
+
     // Créer une recommandation d'irrigation
     const result = await db.query(
       `INSERT INTO recommandations (type, titre, contenu, priorite, parcelle_id, culture_id, source)
-       VALUES ('irrigation', $1, $2, 'moyenne', $3, $4, 'automatique')
+       VALUES ('irrigation', $1, $2, 'moyenne', $3, $4, 'ia')
        RETURNING *`,
       [
         `Irrigation recommandée pour ${parcelle.nom}`,
-        `Basé sur l'analyse des données capteurs, nous recommandons une irrigation de ${Math.round(parcelle.superficie * 3)} litres dans les prochaines 24 heures.`,
+        `IA: Besoin estimé à ${quantiteRecommandee} mm (${litresTotal} L). Prochaine irrigation: ${nextIrrigation}.`,
         parcelle_id,
         parcelle.culture_id
       ]

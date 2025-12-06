@@ -18,6 +18,11 @@ import {
   TrendingUp,
   Calendar,
   MapPin,
+  ThumbsUp,
+  ThumbsDown,
+  MessageSquare,
+  Star,
+  Send,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,6 +38,13 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 // Types
+interface Feedback {
+  utile: boolean | null;
+  note: number;
+  commentaire: string;
+  date: string;
+}
+
 interface Recommendation {
   id: string;
   titre: string;
@@ -51,6 +63,7 @@ interface Recommendation {
   source_ia: string;
   confiance: number;
   actions?: string[];
+  feedback?: Feedback;
 }
 
 // Données simulées
@@ -224,6 +237,9 @@ export default function RecommandationsPage() {
   const [filtreStatut, setFiltreStatut] = useState<string>('all');
   const [selectedRecommandation, setSelectedRecommandation] = useState<Recommendation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [feedbackNote, setFeedbackNote] = useState(0);
+  const [feedbackCommentaire, setFeedbackCommentaire] = useState('');
 
   useEffect(() => {
     // Simuler le chargement
@@ -257,6 +273,43 @@ export default function RecommandationsPage() {
     );
     if (selectedRecommandation?.id === id) {
       setSelectedRecommandation((prev) => prev ? { ...prev, statut: nouveauStatut } : null);
+    }
+  };
+
+  // Envoyer le feedback
+  const envoyerFeedback = (id: string, utile: boolean) => {
+    const feedback: Feedback = {
+      utile,
+      note: feedbackNote,
+      commentaire: feedbackCommentaire,
+      date: new Date().toISOString(),
+    };
+    
+    setRecommandations((prev) =>
+      prev.map((rec) => (rec.id === id ? { ...rec, feedback } : rec))
+    );
+    if (selectedRecommandation?.id === id) {
+      setSelectedRecommandation((prev) => prev ? { ...prev, feedback } : null);
+    }
+    setShowFeedbackForm(false);
+    setFeedbackNote(0);
+    setFeedbackCommentaire('');
+  };
+
+  // Vote rapide (utile ou non)
+  const voteRapide = (id: string, utile: boolean) => {
+    const feedback: Feedback = {
+      utile,
+      note: utile ? 5 : 1,
+      commentaire: '',
+      date: new Date().toISOString(),
+    };
+    
+    setRecommandations((prev) =>
+      prev.map((rec) => (rec.id === id ? { ...rec, feedback } : rec))
+    );
+    if (selectedRecommandation?.id === id) {
+      setSelectedRecommandation((prev) => prev ? { ...prev, feedback } : null);
     }
   };
 
@@ -612,6 +665,147 @@ export default function RecommandationsPage() {
                     >
                       Réouvrir
                     </Button>
+                  )}
+                </div>
+
+                {/* Section Feedback */}
+                <div className="pt-4 border-t space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Votre avis sur cette recommandation
+                    </p>
+                  </div>
+                  
+                  {selectedRecommandation.feedback ? (
+                    <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {selectedRecommandation.feedback.utile ? (
+                            <ThumbsUp className="h-5 w-5 text-green-500" />
+                          ) : (
+                            <ThumbsDown className="h-5 w-5 text-red-500" />
+                          )}
+                          <span className="font-medium">
+                            {selectedRecommandation.feedback.utile ? 'Recommandation utile' : 'Recommandation non utile'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={cn(
+                                'h-4 w-4',
+                                star <= selectedRecommandation.feedback!.note
+                                  ? 'text-yellow-400 fill-yellow-400'
+                                  : 'text-gray-300'
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      {selectedRecommandation.feedback.commentaire && (
+                        <p className="text-sm text-muted-foreground italic">
+                          "{selectedRecommandation.feedback.commentaire}"
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground">
+                        Feedback envoyé le {new Date(selectedRecommandation.feedback.date).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      {!showFeedbackForm ? (
+                        <div className="flex items-center gap-3">
+                          <p className="text-sm text-muted-foreground">Cette recommandation était-elle utile ?</p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => voteRapide(selectedRecommandation.id, true)}
+                              className="hover:bg-green-50 hover:border-green-500 hover:text-green-600"
+                            >
+                              <ThumbsUp className="h-4 w-4 mr-1" />
+                              Oui
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => voteRapide(selectedRecommandation.id, false)}
+                              className="hover:bg-red-50 hover:border-red-500 hover:text-red-600"
+                            >
+                              <ThumbsDown className="h-4 w-4 mr-1" />
+                              Non
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowFeedbackForm(true)}
+                            >
+                              <MessageSquare className="h-4 w-4 mr-1" />
+                              Détaillé
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800">
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">Note globale</p>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <button
+                                  key={star}
+                                  onClick={() => setFeedbackNote(star)}
+                                  className="focus:outline-none"
+                                  title={`Note ${star} étoile${star > 1 ? 's' : ''}`}
+                                  aria-label={`Donner ${star} étoile${star > 1 ? 's' : ''}`}
+                                >
+                                  <Star
+                                    className={cn(
+                                      'h-6 w-6 transition-colors',
+                                      star <= feedbackNote
+                                        ? 'text-yellow-400 fill-yellow-400'
+                                        : 'text-gray-300 hover:text-yellow-300'
+                                    )}
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Commentaire (optionnel)</label>
+                            <textarea
+                              value={feedbackCommentaire}
+                              onChange={(e) => setFeedbackCommentaire(e.target.value)}
+                              placeholder="Partagez votre expérience avec cette recommandation..."
+                              className="w-full p-3 text-sm border rounded-lg resize-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:bg-gray-900 dark:border-gray-700"
+                              rows={3}
+                            />
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => envoyerFeedback(selectedRecommandation.id, feedbackNote >= 3)}
+                              disabled={feedbackNote === 0}
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Envoyer
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setShowFeedbackForm(false);
+                                setFeedbackNote(0);
+                                setFeedbackCommentaire('');
+                              }}
+                            >
+                              Annuler
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </CardContent>

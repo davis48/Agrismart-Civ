@@ -21,10 +21,13 @@ import {
   Camera,
   Cloud,
   Lightbulb,
+  TrendingUp,
+  Users,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Tableau de bord', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Performance & ROI', href: '/performance', icon: TrendingUp },
   { name: 'Parcelles', href: '/parcelles', icon: MapPin },
   { name: 'Capteurs', href: '/capteurs', icon: Thermometer },
   { name: 'Mesures', href: '/mesures', icon: BarChart3 },
@@ -34,6 +37,7 @@ const navigation = [
   { name: 'Diagnostic IA', href: '/diagnostic', icon: Camera },
   { name: 'Marketplace', href: '/marketplace', icon: ShoppingCart },
   { name: 'Formations', href: '/formations', icon: GraduationCap },
+  { name: 'Communauté', href: '/communaute', icon: Users },
   { name: 'Messages', href: '/messages', icon: MessageSquare },
 ]
 

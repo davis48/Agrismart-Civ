@@ -131,7 +131,7 @@ const requireParcelleAccess = async (req, res, next) => {
     // Vérifier si l'utilisateur est propriétaire de la parcelle
     const db = require('../config/database');
     const result = await db.query(
-      `SELECT id FROM parcelles WHERE id = $1 AND proprietaire_id = $2`,
+      `SELECT id FROM parcelles WHERE id = $1 AND user_id = $2`,
       [parcelleId, req.user.id]
     );
     
@@ -174,7 +174,7 @@ const requireCapteurAccess = async (req, res, next) => {
        FROM capteurs c
        JOIN stations s ON c.station_id = s.id
        JOIN parcelles p ON s.parcelle_id = p.id
-       WHERE c.id = $1 AND p.proprietaire_id = $2`,
+       WHERE c.id = $1 AND p.user_id = $2`,
       [capteurId, req.user.id]
     );
     

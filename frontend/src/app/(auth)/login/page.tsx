@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Leaf, Phone, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react'
+import { Leaf, Phone, Lock, Eye, EyeOff, ArrowRight, Home } from 'lucide-react'
 import { Button, Input, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui'
 import { authApi } from '@/lib/api'
 import { useAuthStore } from '@/lib/store'
@@ -26,6 +26,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [requiresOtp, setRequiresOtp] = useState(false)
   const [otpCode, setOtpCode] = useState('')
+  const [loginError, setLoginError] = useState<string | null>(null)
 
   const {
     register,
@@ -47,6 +48,7 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     setDebugMessage('Soumission en cours...')
+    setLoginError(null)
     setIsLoading(true)
     try {
       const response = await authApi.login({ telephone: data.telephone, password: data.password })
@@ -59,15 +61,32 @@ export default function LoginPage() {
           setDebugMessage('Connexion réussie! Redirection...')
           login(response.data.data.user, response.data.data.token)
           toast.success('Connexion réussie!')
-          router.push('/dashboard')
+          
+          // Rediriger vers le dashboard admin si l'utilisateur est admin
+          const userRole = response.data.data.user.role
+          if (userRole === 'admin' || userRole === 'super_admin') {
+            router.push('/admin')
+          } else {
+            router.push('/dashboard')
+          }
         }
       } else {
-        setDebugMessage('Échec: ' + response.data.message)
-        toast.error(response.data.message || 'Erreur de connexion')
+        const errorMsg = response.data.message || 'Numéro de téléphone ou mot de passe incorrect'
+        setLoginError(errorMsg)
+        setDebugMessage('Échec: ' + errorMsg)
+        toast.error(errorMsg)
       }
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } }
-      const errorMessage = err.response?.data?.message || 'Erreur de connexion'
+      const err = error as { response?: { data?: { message?: string }, status?: number } }
+      let errorMessage = 'Numéro de téléphone ou mot de passe incorrect'
+      
+      if (err.response?.status === 401 || err.response?.status === 404) {
+        errorMessage = 'Numéro de téléphone ou mot de passe incorrect'
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message
+      }
+      
+      setLoginError(errorMessage)
       setDebugMessage('Erreur: ' + errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -103,6 +122,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-4">
+      {/* Bouton retour accueil */}
+      <Link 
+        href="/" 
+        className="absolute top-4 left-4 flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
+      >
+        <Home className="h-5 w-5" />
+        <span className="text-sm font-medium">Accueil</span>
+      </Link>
+
       {/* Logo */}
       <div className="flex items-center gap-2 mb-8">
         <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-green-600 shadow-lg">
@@ -176,6 +204,16 @@ export default function LoginPage() {
                   Mot de passe oublié?
                 </Link>
               </div>
+
+              {/* Afficher l'erreur de connexion */}
+              {loginError && (
+                <div className="bg-red-50 border border-red-300 rounded-lg p-3 text-red-700 text-sm flex items-center gap-2">
+                  <svg className="h-5 w-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                  <span>{loginError}</span>
+                </div>
+              )}
 
               {/* Afficher les erreurs de validation */}
               {Object.keys(errors).length > 0 && (

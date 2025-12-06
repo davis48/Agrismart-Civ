@@ -9,8 +9,11 @@ const { ROLES } = require('../middlewares/rbac');
 const logger = require('../utils/logger');
 const sharp = require('sharp');
 const path = require('path');
-const fs = require('fs').promises;
+const fsPromises = require('fs').promises;
+const fs = require('fs');
 const config = require('../config');
+const axios = require('axios');
+const FormData = require('form-data');
 
 /* ========== CATALOGUE DES MALADIES ========== */
 
@@ -69,16 +72,16 @@ exports.search = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const { nom, nom_scientifique, type, description, symptomes, 
-            traitements, prevention, cultures_affectees } = req.body;
+    const { nom, nom_scientifique, type, description, symptomes,
+      traitements, prevention, cultures_affectees } = req.body;
 
     const result = await db.query(
       `INSERT INTO maladies (nom, nom_scientifique, type, description, symptomes, 
                              traitements, prevention, cultures_affectees)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [nom, nom_scientifique, type, description, symptomes, 
-       traitements, prevention, cultures_affectees || []]
+      [nom, nom_scientifique, type, description, symptomes,
+        traitements, prevention, cultures_affectees || []]
     );
 
     logger.audit('Création maladie', { userId: req.user.id, maladieId: result.rows[0].id });
@@ -114,9 +117,9 @@ exports.getById = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const fields = ['nom', 'nom_scientifique', 'type', 'description', 
-                   'symptomes', 'traitements', 'prevention', 'cultures_affectees'];
-    
+    const fields = ['nom', 'nom_scientifique', 'type', 'description',
+      'symptomes', 'traitements', 'prevention', 'cultures_affectees'];
+
     const updates = [];
     const params = [];
     let paramIndex = 1;
@@ -193,14 +196,45 @@ exports.detectFromImage = async (req, res, next) => {
     const uploadPath = path.join(config.upload.path, 'detections', filename);
 
     // Créer le dossier si nécessaire
-    await fs.mkdir(path.dirname(uploadPath), { recursive: true });
-    await fs.writeFile(uploadPath, processedImage);
+    await fsPromises.mkdir(path.dirname(uploadPath), { recursive: true });
+    await fsPromises.writeFile(uploadPath, processedImage);
 
     const imageUrl = `/uploads/detections/${filename}`;
 
-    // TODO: Intégrer le modèle IA réel (TensorFlow/PyTorch)
-    // Pour l'instant, simulation de détection
-    const detectionResult = await simulateAIDetection(processedImage);
+    // Appel au microservice IA Python
+    const formData = new FormData();
+    // Créer un stream à partir du buffer ou du fichier sauvegardé
+    // Ici on utilise le fichier sauvegardé pour simplifier
+    formData.append('image', fs.createReadStream(uploadPath));
+
+    let detectionResult;
+    try {
+      const aiResponse = await axios.post('http://localhost:5000/predict/disease', formData, {
+        headers: {
+          ...formData.getHeaders()
+        }
+      });
+
+      const { disease, confidence, recommendation } = aiResponse.data;
+
+      // Trouver l'ID de la maladie correspondante
+      const maladieQuery = await db.query('SELECT id FROM maladies WHERE nom = $1', [disease]);
+      const maladieId = maladieQuery.rows.length > 0 ? maladieQuery.rows[0].id : null;
+
+      detectionResult = {
+        maladie_id: maladieId,
+        confiance: confidence,
+        raw: aiResponse.data
+      };
+    } catch (aiError) {
+      logger.error('Erreur service IA', { error: aiError.message });
+      // Fallback ou erreur
+      detectionResult = {
+        maladie_id: null,
+        confiance: 0,
+        raw: { error: 'Service IA indisponible' }
+      };
+    }
 
     // Enregistrer la détection
     const result = await db.query(
@@ -208,20 +242,15 @@ exports.detectFromImage = async (req, res, next) => {
                                         maladie_detectee_id, confiance, description, resultats_bruts)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
-      [req.user.id, parcelle_id, culture_id, imageUrl, 
-       detectionResult.maladie_id, detectionResult.confiance, 
-       description, JSON.stringify(detectionResult.raw)]
+      [req.user.id, parcelle_id, culture_id, imageUrl,
+      detectionResult.maladie_id, detectionResult.confiance,
+        description, JSON.stringify(detectionResult.raw)]
     );
 
     const detection = result.rows[0];
-
-    // Récupérer les détails de la maladie si détectée
     let maladie = null;
     if (detectionResult.maladie_id) {
-      const maladieResult = await db.query(
-        `SELECT * FROM maladies WHERE id = $1`,
-        [detectionResult.maladie_id]
-      );
+      const maladieResult = await db.query('SELECT * FROM maladies WHERE id = $1', [detectionResult.maladie_id]);
       maladie = maladieResult.rows[0];
     }
 
@@ -247,7 +276,7 @@ exports.detectFromImageBatch = async (req, res, next) => {
     }
 
     const results = [];
-    
+
     for (const file of req.files) {
       const processedImage = await sharp(file.buffer)
         .resize(640, 640, { fit: 'inside' })
@@ -398,7 +427,7 @@ exports.getStats = async (req, res, next) => {
 async function simulateAIDetection(imageBuffer) {
   // Récupérer une maladie aléatoire pour la simulation
   const maladies = await db.query(`SELECT id, nom FROM maladies LIMIT 10`);
-  
+
   if (maladies.rows.length === 0) {
     return {
       maladie_id: null,

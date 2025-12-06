@@ -20,7 +20,7 @@ exports.getAll = async (req, res, next) => {
 
     let query = `
       SELECT id, email, telephone, nom, prenoms, role, status, langue_preferee, 
-             localisation, created_at, derniere_connexion
+             region_id, village, created_at, derniere_connexion
       FROM users
       WHERE 1=1
     `;
@@ -44,10 +44,8 @@ exports.getAll = async (req, res, next) => {
     }
 
     // Count total
-    const countResult = await db.query(
-      query.replace(/SELECT .* FROM/, 'SELECT COUNT(*) FROM'),
-      params
-    );
+    let countQuery = query.replace(/SELECT[\s\S]*?FROM/i, 'SELECT COUNT(*) FROM');
+    const countResult = await db.query(countQuery, params);
     const total = parseInt(countResult.rows[0].count);
 
     // Get paginated results
@@ -111,11 +109,11 @@ exports.getProducteurs = async (req, res, next) => {
 
     const result = await db.query(
       `SELECT u.id, u.email, u.telephone, u.nom, u.prenoms, u.status, u.langue_preferee,
-              u.localisation, u.created_at, u.derniere_connexion,
+              u.region_id, u.village, u.created_at, u.derniere_connexion,
               COUNT(DISTINCT p.id) as nb_parcelles,
-              COALESCE(SUM(p.superficie), 0) as superficie_totale
+              COALESCE(SUM(p.superficie_hectares), 0) as superficie_totale
        FROM users u
-       LEFT JOIN parcelles p ON u.id = p.proprietaire_id
+       LEFT JOIN parcelles p ON u.id = p.user_id
        WHERE u.role = 'producteur'
        GROUP BY u.id
        ORDER BY u.created_at DESC
@@ -152,7 +150,7 @@ exports.getById = async (req, res, next) => {
 
     const result = await db.query(
       `SELECT id, email, telephone, nom, prenoms, role, status, langue_preferee,
-              photo_url, adresse, localisation, created_at, derniere_connexion
+              region_id, village, created_at, derniere_connexion
        FROM users WHERE id = $1`,
       [id]
     );
@@ -219,7 +217,7 @@ exports.create = async (req, res, next) => {
 exports.update = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { nom, prenoms, role, langue_preferee, adresse, localisation } = req.body;
+    const { nom, prenoms, role, langue_preferee, village, region_id } = req.body;
 
     const result = await db.query(
       `UPDATE users 
@@ -227,12 +225,12 @@ exports.update = async (req, res, next) => {
            prenoms = COALESCE($2, prenoms),
            role = COALESCE($3, role),
            langue_preferee = COALESCE($4, langue_preferee),
-           adresse = COALESCE($5, adresse),
-           localisation = COALESCE($6, localisation),
+           village = COALESCE($5, village),
+           region_id = COALESCE($6, region_id),
            updated_at = NOW()
        WHERE id = $7
        RETURNING id, email, telephone, nom, prenoms, role, status, langue_preferee`,
-      [nom, prenoms, role, langue_preferee, adresse, localisation, id]
+      [nom, prenoms, role, langue_preferee, village, region_id, id]
     );
 
     if (result.rows.length === 0) {
@@ -327,9 +325,9 @@ exports.getParcelles = async (req, res, next) => {
     const { id } = req.params;
 
     const result = await db.query(
-      `SELECT id, nom, superficie, latitude, longitude, adresse, type_sol, statut, created_at
+      `SELECT id, nom, superficie_hectares, latitude, longitude, type_sol, status, created_at
        FROM parcelles 
-       WHERE proprietaire_id = $1
+       WHERE user_id = $1
        ORDER BY created_at DESC`,
       [id]
     );

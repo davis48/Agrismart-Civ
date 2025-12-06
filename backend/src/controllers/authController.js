@@ -34,12 +34,23 @@ exports.register = async (req, res, next) => {
     
     // Utiliser prenoms ou prenom (compatibilité frontend)
     const userPrenoms = prenoms || prenom || '';
+    
+    // Email peut être null/undefined
+    const userEmail = email || null;
 
     // Vérifier si l'utilisateur existe déjà
-    const existingUser = await db.query(
-      `SELECT id FROM users WHERE email = $1 OR telephone = $2`,
-      [email, telephone]
-    );
+    let existingUser;
+    if (userEmail) {
+      existingUser = await db.query(
+        `SELECT id FROM users WHERE email = $1 OR telephone = $2`,
+        [userEmail, telephone]
+      );
+    } else {
+      existingUser = await db.query(
+        `SELECT id FROM users WHERE telephone = $1`,
+        [telephone]
+      );
+    }
 
     if (existingUser.rows.length > 0) {
       throw errors.conflict('Un utilisateur avec cet email ou ce téléphone existe déjà');
@@ -59,7 +70,7 @@ exports.register = async (req, res, next) => {
       `INSERT INTO users (email, telephone, password_hash, nom, prenoms, langue_preferee, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING id, email, telephone, nom, prenoms, role, status, langue_preferee, created_at`,
-      [email, telephone, hashedPassword, nom, userPrenoms, langue_preferee, initialStatus]
+      [userEmail, telephone, hashedPassword, nom, userPrenoms, langue_preferee, initialStatus]
     );
 
     const user = result.rows[0];

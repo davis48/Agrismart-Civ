@@ -45,29 +45,28 @@ const validators = {
       .withMessage(`${field} doit être un UUID valide`);
   },
   
-  // Email
+  // Email (optionnel pour l'inscription)
   email: () => body('email')
+    .optional({ nullable: true, checkFalsy: true })
     .isEmail()
     .withMessage('Email invalide')
     .normalizeEmail()
     .isLength({ max: 255 })
     .withMessage('Email trop long (max 255 caractères)'),
   
-  // Téléphone (format ivoirien)
+  // Téléphone (format ivoirien - plus flexible)
   telephone: () => body('telephone')
+    .notEmpty()
+    .withMessage('Le numéro de téléphone est requis')
     .matches(/^(\+225)?[0-9]{10}$/)
     .withMessage('Numéro de téléphone invalide (format: +2250123456789 ou 0123456789)'),
   
-  // Mot de passe
+  // Mot de passe (assoupli pour correspondre au frontend)
   password: () => body('password')
-    .isLength({ min: 8 })
-    .withMessage('Le mot de passe doit contenir au moins 8 caractères')
+    .isLength({ min: 6 })
+    .withMessage('Le mot de passe doit contenir au moins 6 caractères')
     .matches(/[A-Z]/)
-    .withMessage('Le mot de passe doit contenir au moins une majuscule')
-    .matches(/[a-z]/)
-    .withMessage('Le mot de passe doit contenir au moins une minuscule')
-    .matches(/[0-9]/)
-    .withMessage('Le mot de passe doit contenir au moins un chiffre'),
+    .withMessage('Le mot de passe doit contenir au moins une majuscule'),
   
   // Nom / Prénom
   nom: () => body('nom')
