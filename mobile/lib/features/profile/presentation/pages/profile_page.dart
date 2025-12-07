@@ -116,7 +116,7 @@ class ProfilePage extends StatelessWidget {
                     context,
                     icon: Icons.person_outline,
                     title: 'Informations personnelles',
-                    onTap: () {},
+                    onTap: () => context.push('/edit-profile'),
                   ),
                   _buildMenuItem(
                     context,

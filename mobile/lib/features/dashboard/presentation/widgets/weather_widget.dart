@@ -193,7 +193,7 @@ class WeatherForecastWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 100,
+            height: 120,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: forecast.length,
@@ -211,32 +211,31 @@ class WeatherForecastWidget extends StatelessWidget {
                         : null,
                   ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       Text(
                         day.dayName,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Colors.grey.shade600,
                         ),
                       ),
-                      const SizedBox(height: 8),
                       Icon(
                         _getWeatherIcon(day.condition),
                         color: Colors.blue.shade400,
-                        size: 24,
+                        size: 22,
                       ),
-                      const SizedBox(height: 8),
                       Text(
                         '${day.tempMax.round()}°',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
+                          fontSize: 14,
                         ),
                       ),
                       Text(
                         '${day.tempMin.round()}°',
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Colors.grey.shade500,
                         ),
                       ),

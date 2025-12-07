@@ -14,6 +14,7 @@ import 'features/marketplace/presentation/pages/marketplace_page.dart';
 import 'features/formations/presentation/pages/formations_page.dart';
 import 'features/messages/presentation/pages/messages_page.dart';
 import 'features/profile/presentation/pages/profile_page.dart';
+import 'features/profile/presentation/pages/edit_profile_page.dart';
 import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/analytics/presentation/pages/analytics_page.dart';
 import 'features/notifications/presentation/pages/notifications_page.dart';
@@ -84,6 +85,10 @@ final _router = GoRouter(
     GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfilePage(),
+    ),
+    GoRoute(
+      path: '/edit-profile',
+      builder: (context, state) => const EditProfilePage(),
     ),
     GoRoute(
       path: '/settings',

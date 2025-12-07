@@ -31,6 +31,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
       throw ServerFailure(message);
+    } catch (e) {
+      throw ServerFailure('Erreur inattendue: ${e.toString()}');
     }
   }
 
