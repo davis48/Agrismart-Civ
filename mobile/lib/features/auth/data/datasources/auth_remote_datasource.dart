@@ -27,7 +27,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         'identifier': identifier,
         'password': password,
       });
-      return UserModel.fromJson(response.data['data']['user']);
+      
+      final data = response.data['data'];
+      
+      // En mode dev, le backend renvoie directement les tokens
+      if (data['token'] != null) {
+        print('[DEBUG] Token reçu lors de la connexion: ${data['token']}');
+      }
+      
+      return UserModel.fromJson(data['user']);
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
       throw ServerFailure(message);
@@ -67,7 +75,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         if (email != null && email.isNotEmpty) 'email': email,
         'langue_preferee': languePreferee,
       });
-      return UserModel.fromJson(response.data['data']['user']);
+      
+      final data = response.data['data'];
+      
+      // En mode dev, le backend renvoie directement les tokens
+      // On les stocke pour les utiliser dans les prochaines requêtes
+      if (data['token'] != null) {
+        // Note: Le stockage sera géré par le BLoC/UseCase qui appellera cette méthode
+        // Pour l'instant, on retourne juste l'utilisateur
+        print('[DEBUG] Token reçu lors de l\'inscription: ${data['token']}');
+      }
+      
+      return UserModel.fromJson(data['user']);
     } on DioException catch (e) {
       final message = _extractErrorMessage(e);
       throw ServerFailure(message);

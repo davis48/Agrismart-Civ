@@ -117,20 +117,35 @@ CREATE INDEX idx_users_role ON users(role);
 CREATE INDEX idx_users_region ON users(region_id);
 
 -- =====================================================
--- TABLE: SESSIONS (Refresh Tokens)
+-- TABLE: REFRESH TOKENS (Manquante dans version précédente)
 -- =====================================================
-CREATE TABLE sessions (
+CREATE TABLE refresh_tokens (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    refresh_token VARCHAR(500) NOT NULL,
-    device_info TEXT,
-    ip_address VARCHAR(45),
+    token VARCHAR(500) NOT NULL,
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    revoked BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_sessions_user ON sessions(user_id);
-CREATE INDEX idx_sessions_token ON sessions(refresh_token);
+CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
+
+-- =====================================================
+-- TABLE: OTP CODES (Manquante dans version précédente)
+-- =====================================================
+CREATE TABLE otp_codes (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    code VARCHAR(10) NOT NULL,
+    type VARCHAR(20) NOT NULL, -- 'verification', 'login', 'reset'
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    used BOOLEAN DEFAULT false,
+    attempts INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_otp_codes_user ON otp_codes(user_id);
 
 -- =====================================================
 -- TABLE: PARCELLES

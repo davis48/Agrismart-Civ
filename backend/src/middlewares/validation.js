@@ -11,24 +11,24 @@ const { AppError } = require('./errorHandler');
  */
 const validate = (req, res, next) => {
   const errors = validationResult(req);
-  
+
   if (!errors.isEmpty()) {
     const errorMessages = errors.array().map(err => ({
       field: err.path,
       message: err.msg,
       value: err.value
     }));
-    
+
     const error = new AppError(
       'Erreur de validation des données',
       422,
       'VALIDATION_ERROR'
     );
     error.errors = errorMessages;
-    
+
     return next(error);
   }
-  
+
   next();
 };
 
@@ -38,13 +38,13 @@ const validate = (req, res, next) => {
 const validators = {
   // UUID
   uuid: (field, location = 'param') => {
-    const validator = location === 'param' ? param(field) : 
-                      location === 'body' ? body(field) : query(field);
+    const validator = location === 'param' ? param(field) :
+      location === 'body' ? body(field) : query(field);
     return validator
       .isUUID()
       .withMessage(`${field} doit être un UUID valide`);
   },
-  
+
   // Email (optionnel pour l'inscription)
   email: () => body('email')
     .optional({ nullable: true, checkFalsy: true })
@@ -53,21 +53,21 @@ const validators = {
     .normalizeEmail()
     .isLength({ max: 255 })
     .withMessage('Email trop long (max 255 caractères)'),
-  
+
   // Téléphone (format ivoirien - plus flexible)
   telephone: () => body('telephone')
     .notEmpty()
     .withMessage('Le numéro de téléphone est requis')
     .matches(/^(\+225)?[0-9]{10}$/)
     .withMessage('Numéro de téléphone invalide (format: +2250123456789 ou 0123456789)'),
-  
+
   // Mot de passe (assoupli pour correspondre au frontend)
   password: () => body('password')
     .isLength({ min: 6 })
     .withMessage('Le mot de passe doit contenir au moins 6 caractères')
     .matches(/[A-Z]/)
     .withMessage('Le mot de passe doit contenir au moins une majuscule'),
-  
+
   // Nom / Prénom
   nom: () => body('nom')
     .trim()
@@ -75,100 +75,100 @@ const validators = {
     .withMessage('Le nom est requis')
     .isLength({ min: 2, max: 100 })
     .withMessage('Le nom doit contenir entre 2 et 100 caractères'),
-  
+
   prenom: () => body('prenom')
     .trim()
     .notEmpty()
     .withMessage('Le prénom est requis')
     .isLength({ min: 2, max: 100 })
     .withMessage('Le prénom doit contenir entre 2 et 100 caractères'),
-  
+
   prenoms: () => body('prenoms')
     .trim()
     .notEmpty()
     .withMessage('Les prénoms sont requis')
     .isLength({ min: 2, max: 100 })
     .withMessage('Les prénoms doivent contenir entre 2 et 100 caractères'),
-  
+
   // OTP
   otp: () => body('otp')
     .isLength({ min: 6, max: 6 })
     .withMessage('Le code OTP doit contenir 6 chiffres')
     .isNumeric()
     .withMessage('Le code OTP doit être numérique'),
-  
+
   // Coordonnées GPS
   latitude: (field = 'latitude') => body(field)
     .isFloat({ min: -90, max: 90 })
     .withMessage('Latitude invalide (doit être entre -90 et 90)'),
-  
+
   longitude: (field = 'longitude') => body(field)
     .isFloat({ min: -180, max: 180 })
     .withMessage('Longitude invalide (doit être entre -180 et 180)'),
-  
+
   // Surface en hectares
   superficie: () => body('superficie')
     .isFloat({ min: 0.01, max: 10000 })
     .withMessage('Superficie invalide (doit être entre 0.01 et 10000 hectares)'),
-  
+
   // Pagination
   page: () => query('page')
     .optional()
     .isInt({ min: 1 })
     .withMessage('Le numéro de page doit être un entier positif')
     .toInt(),
-  
+
   limit: () => query('limit')
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('La limite doit être entre 1 et 100')
     .toInt(),
-  
+
   // Dates
   date: (field) => body(field)
     .isISO8601()
     .withMessage(`${field} doit être une date valide (format ISO 8601)`)
     .toDate(),
-  
+
   dateOptional: (field) => body(field)
     .optional()
     .isISO8601()
     .withMessage(`${field} doit être une date valide (format ISO 8601)`)
     .toDate(),
-  
+
   // Langue
   langue: () => body('langue')
     .optional()
     .isIn(['fr', 'dioula', 'baoule', 'bete'])
     .withMessage('Langue non supportée'),
-  
+
   langue_preferee: () => body('langue_preferee')
     .optional()
     .isIn(['fr', 'dioula', 'baoule', 'bete'])
     .withMessage('Langue non supportée'),
-  
+
   // Rôle
   role: () => body('role')
     .isIn(['producteur', 'conseiller', 'admin', 'partenaire'])
     .withMessage('Rôle invalide'),
-  
+
   // Type de capteur (conforme au schéma PostgreSQL)
   typeCapteur: () => body('type')
     .isIn(['humidite', 'temperature', 'ph', 'npk', 'meteo', 'camera'])
     .withMessage('Type de capteur invalide'),
-  
+
   // Niveau d'alerte (conforme au schéma PostgreSQL)
   niveauAlerte: () => body('niveau')
     .isIn(['info', 'important', 'critique'])
     .withMessage('Niveau d\'alerte invalide'),
-  
+
   // Texte optionnel
   textOptional: (field, max = 500) => body(field)
     .optional()
     .trim()
     .isLength({ max })
     .withMessage(`${field} ne peut pas dépasser ${max} caractères`),
-  
+
   // Texte requis
   textRequired: (field, min = 1, max = 500) => body(field)
     .trim()
@@ -176,23 +176,23 @@ const validators = {
     .withMessage(`${field} est requis`)
     .isLength({ min, max })
     .withMessage(`${field} doit contenir entre ${min} et ${max} caractères`),
-  
+
   // Nombre positif
   positiveNumber: (field) => body(field)
     .isFloat({ min: 0 })
     .withMessage(`${field} doit être un nombre positif`),
-  
+
   // Entier positif
   positiveInt: (field) => body(field)
     .isInt({ min: 0 })
     .withMessage(`${field} doit être un entier positif`)
     .toInt(),
-  
+
   // Tableau non vide
   arrayNotEmpty: (field) => body(field)
     .isArray({ min: 1 })
     .withMessage(`${field} doit être un tableau non vide`),
-  
+
   // Boolean
   boolean: (field) => body(field)
     .isBoolean()
@@ -206,7 +206,7 @@ const validators = {
 const schemas = {
   // Inscription
   register: [
-    validators.email(),
+    // validators.email(), // Email est optionnel, validé dans le controller
     validators.telephone(),
     validators.password(),
     validators.nom(),
@@ -214,7 +214,7 @@ const schemas = {
     validators.langue_preferee(),
     validate
   ],
-  
+
   // Connexion
   login: [
     body('identifier')
@@ -225,7 +225,7 @@ const schemas = {
       .withMessage('Mot de passe requis'),
     validate
   ],
-  
+
   // Vérification OTP
   verifyOtp: [
     validators.otp(),
@@ -234,7 +234,7 @@ const schemas = {
       .withMessage('Email ou téléphone requis'),
     validate
   ],
-  
+
   // Création de parcelle
   createParcelle: [
     validators.textRequired('nom', 2, 100),
@@ -248,7 +248,7 @@ const schemas = {
       .withMessage('Type de sol invalide'),
     validate
   ],
-  
+
   // Création de station
   createStation: [
     validators.textRequired('nom', 2, 100),
@@ -257,7 +257,7 @@ const schemas = {
     validators.longitude('longitude'),
     validate
   ],
-  
+
   // Création de capteur
   createCapteur: [
     validators.uuid('station_id', 'body'),
@@ -266,7 +266,7 @@ const schemas = {
     validators.textOptional('numero_serie', 100),
     validate
   ],
-  
+
   // Envoi de mesure
   sendMesure: [
     validators.uuid('capteur_id', 'body'),
@@ -280,14 +280,14 @@ const schemas = {
     validators.dateOptional('timestamp'),
     validate
   ],
-  
+
   // Pagination
   pagination: [
     validators.page(),
     validators.limit(),
     validate
   ],
-  
+
   // Paramètre UUID
   paramUuid: (field = 'id') => [
     validators.uuid(field, 'param'),
