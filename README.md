@@ -6,19 +6,17 @@
 
 > **Système Agricole Intelligent pour améliorer la productivité agricole en Côte d'Ivoire**
 
-<p align="center">
-  <img src="docs/images/logo.png" alt="AgriSmart CI Logo" width="200"/>
-</p>
-
 ## 📋 Description
 
 AgriSmart CI est une plateforme complète d'agriculture de précision conçue pour les producteurs agricoles de Côte d'Ivoire. Elle combine :
 
 - 📡 **Capteurs IoT** pour le monitoring en temps réel
-- 🤖 **Intelligence Artificielle** pour la détection de maladies
-- 📱 **Application Mobile** multilingue (Français, Baoulé, Dioula)
-- 🌐 **Interface Web** pour l'administration
+- 🤖 **Intelligence Artificielle** pour la détection de maladies et recommandations d'irrigation
+- 📱 **Application Mobile Flutter** multilingue (Français, Baoulé, Malinké, Sénoufo)
+- 🌐 **Interface Web Next.js** pour l'administration et la visualisation
 - 🛒 **Marketplace** pour la vente de produits agricoles
+- 📚 **Formations** vidéo pour les agriculteurs
+- 💬 **Messagerie** et support communautaire
 
 ## 🏗️ Architecture
 
@@ -29,7 +27,7 @@ AgriSmart CI est une plateforme complète d'agriculture de précision conçue po
 │                                                                 │
 │   ┌──────────────┐    ┌──────────────┐    ┌──────────────┐     │
 │   │   Mobile     │    │   Frontend   │    │   Capteurs   │     │
-│   │   Flutter    │    │   Next.js    │    │   IoT        │     │
+│   │   Flutter    │    │   Next.js    │    │   IoT/MQTT   │     │
 │   └──────┬───────┘    └──────┬───────┘    └──────┬───────┘     │
 │          │                   │                   │              │
 │          │         ┌─────────┴─────────┐         │              │
@@ -37,13 +35,13 @@ AgriSmart CI est une plateforme complète d'agriculture de précision conçue po
 │          ▼         ▼                   ▼         ▼              │
 │   ┌──────────────────┐         ┌──────────────────┐            │
 │   │   Backend API    │◄───────►│   IoT Service    │            │
-│   │   Node.js        │         │   MQTT/InfluxDB  │            │
+│   │   Node.js/Socket │         │   MQTT/InfluxDB  │            │
 │   └────────┬─────────┘         └──────────────────┘            │
 │            │                                                    │
 │            ▼                                                    │
 │   ┌──────────────────┐         ┌──────────────────┐            │
 │   │   PostgreSQL     │         │   AI Service     │            │
-│   │   + Redis        │         │   TensorFlow     │            │
+│   │   + Redis        │         │   Flask/Gunicorn │            │
 │   └──────────────────┘         └──────────────────┘            │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
@@ -53,256 +51,281 @@ AgriSmart CI est une plateforme complète d'agriculture de précision conçue po
 
 | Service | Technologie | Port | Description |
 |---------|-------------|------|-------------|
-| **Backend** | Node.js/Express | 3000 | API REST principale |
-| **Frontend** | Next.js | 3001 | Interface web |
-| **Mobile** | Flutter | - | App Android/iOS |
-| **AI Service** | Flask/TensorFlow | 5000 | Détection maladies |
-| **IoT Service** | Node.js/MQTT | 4000 | Gateway capteurs |
-| **PostgreSQL** | - | 5432 | Base de données |
-| **Redis** | - | 6379 | Cache & sessions |
-| **InfluxDB** | - | 8086 | Données capteurs |
+| **Backend** | Node.js/Express | 3000 | API REST principale + WebSocket |
+| **Frontend** | Next.js 14 | 3001 | Interface web responsive |
+| **Mobile** | Flutter 3.10+ | - | App Android/iOS multilingue |
+| **AI Service** | Flask/TensorFlow | 5001 | Détection maladies + prédiction irrigation |
+| **IoT Service** | Node.js/MQTT | 4000 | Gateway capteurs en temps réel |
+| **PostgreSQL** | PostgreSQL 15 | 5432 | Base de données principale |
+| **Redis** | Redis 7 | 6379 | Cache & sessions |
+| **InfluxDB** | InfluxDB 2.7 | 8086 | Données time-series capteurs |
+| **Mosquitto** | Eclipse Mosquitto | 1883 | MQTT Broker pour IoT |
+
+## ✨ Fonctionnalités Principales
+
+### 🌱 Monitoring Agricole
+
+- Suivi en temps réel de l'humidité du sol, température, pH
+- Alertes automatiques basées sur des seuils configurables
+- Historique et visualisation graphique des données
+- Support de multiples parcelles et plantations
+
+### 🤖 Intelligence Artificielle
+
+- **Détection de maladies** : Analyse d'images de plantes avec TensorFlow
+- **Recommandations d'irrigation** : ML pour optimiser l'arrosage
+- Prédictions météorologiques intégrées
+- Conseils personnalisés par culture
+
+### 📱 Application Mobile
+
+- Interface multilingue (FR, Baoulé, Malinké, Sénoufo)
+- Scan d'images pour diagnostic de maladies
+- Notifications push pour les alertes
+- Mode hors ligne avec synchronisation
+- Gestion complète des parcelles
+
+### 🌐 Interface Web
+
+- Dashboard avec KPIs agricoles
+- Gestion des utilisateurs et rôles (Producteur, Conseiller, Admin)
+- Visualisation temps réel des données capteurs
+- Marketplace intégrée
+- Système de formations vidéo
+
+### 📡 IoT & Capteurs
+
+- Support de multiples types de capteurs (humidité, température, pH, NPK)
+- Communication via MQTT
+- Stockage optimisé dans InfluxDB
+- Configuration flexible des seuils d'alerte
 
 ## 🚀 Démarrage Rapide
 
+### ⚠️ Important : Utiliser Docker
+
+**Les services sont configurés pour fonctionner UNIQUEMENT dans Docker.** Ne lancez pas `npm run dev` ou `python app.py` directement.
+
 ### Prérequis
 
-- **Docker** & **Docker Compose** (recommandé)
-- Ou installation manuelle :
-  - Node.js 20+
-  - Python 3.10+
-  - Flutter 3.10+
-  - PostgreSQL 15+
-  - Redis 7+
+- **Docker** & **Docker Compose** (obligatoire)
+- Git
 
-### 🐳 Lancement avec Docker (Recommandé)
+### 🐳 Installation et Lancement
 
 ```bash
 # 1. Cloner le repository
-git clone https://github.com/agrismart/agriculture.git
+git clone https://github.com/votre-repo/agriculture.git
 cd agriculture
 
-# 2. Copier les fichiers de configuration
-cp backend/.env.example backend/.env
-cp ai_service/.env.example ai_service/.env
-cp iot_service/.env.example iot_service/.env
-cp frontend/.env.example frontend/.env.local
-
-# 3. Lancer tous les services
+# 2. Lancer tous les services
 docker-compose up -d
 
-# 4. Vérifier que tout fonctionne
+# 3. Vérifier que tout fonctionne
 docker-compose ps
 
-# 5. Voir les logs
+# Les services devraient tous être "Up" ou "healthy"
+```
+
+### 🌐 Accès aux Services
+
+- **Frontend Web** : <http://localhost:3001>
+- **Backend API** : <http://localhost:3000/api/v1>
+- **AI Service** : <http://localhost:5001>
+- **API Documentation** : <http://localhost:3000/api/v1> (page d'accueil)
+
+### 👤 Compte de Test
+
+L'application est livrée avec un compte de test :
+
+- **Téléphone** : `0700000001`
+- **Mot de passe** : `password123`
+
+## 📚 Documentation Complète
+
+| Document | Description |
+|----------|-------------|
+| [DEMARRAGE_SERVICES.md](DEMARRAGE_SERVICES.md) | **Guide complet de démarrage** (IMPORTANT) |
+| [backend/README.md](backend/README.md) | Documentation API Backend |
+| [frontend/README.md](frontend/README.md) | Documentation Frontend |
+| [mobile/README.md](mobile/README.md) | Documentation App Mobile |
+| [ai_service/README.md](ai_service/README.md) | Documentation Service IA |
+| [iot_service/README.md](iot_service/README.md) | Documentation Service IoT |
+
+## 🔧 Commandes Utiles
+
+```bash
+# Voir l'état des services
+docker-compose ps
+
+# Voir les logs en temps réel
 docker-compose logs -f
+
+# Voir les logs d'un service spécifique
+docker logs agrismart_api --tail 50
+docker logs agrismart_frontend --tail 50
+docker logs agrismart_ai --tail 50
+
+# Redémarrer un service
+docker-compose restart api
+
+# Rebuild un service après modification
+docker-compose up -d --build frontend
+
+# Stopper tous les services
+docker-compose down
+
+# Rebuild complet
+docker-compose down
+docker-compose up -d --build
 ```
 
-Les services seront accessibles sur :
-- **Backend API** : http://localhost:3000
-- **Frontend Web** : http://localhost:3001
-- **AI Service** : http://localhost:5000
-- **IoT Service** : http://localhost:4000
-- **PgAdmin** : http://localhost:5050 (admin@agrismart.ci / admin)
+## 🛠️ Configuration
 
-### 🔧 Lancement Manuel (Sans Docker)
+### Variables d'Environnement
 
-#### 1. Base de Données
+Les fichiers `.env.example` sont fournis dans chaque service :
 
 ```bash
-# PostgreSQL
-createdb agrismart
-psql -d agrismart -f backend/src/database/schema.sql
-
-# Redis (doit être en cours d'exécution)
-redis-server
+backend/.env.example       # Configuration backend
+frontend/.env.example      # Configuration frontend  
+ai_service/.env.example    # Configuration AI
+iot_service/.env.example   # Configuration IoT
 ```
 
-#### 2. Backend API
+**Pour le développement Docker**, les configurations sont dans `docker-compose.yml`.
 
-```bash
-cd backend
+### Configuration Mobile
 
-# Installer les dépendances
-npm install
+Modifier `mobile/lib/core/config/app_config.dart` :
 
-# Configurer l'environnement
-cp .env.example .env
-# Éditer .env avec vos configurations
+```dart
+// Pour émulateur Android
+static const String baseUrl = 'http://10.0.2.2:3000/api/v1';
+static const String aiServiceUrl = 'http://10.0.2.2:5001';
 
-# Démarrer
-npm run dev
-
-# Le backend sera sur http://localhost:3000
+// Pour appareil physique
+static const String baseUrl = 'http://VOTRE_IP:3000/api/v1';
+static const String aiServiceUrl = 'http://VOTRE_IP:5001';
 ```
 
-#### 3. AI Service
+## 📱 Application Mobile
 
-```bash
-cd ai_service
-
-# Créer l'environnement virtuel
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# venv\Scripts\activate   # Windows
-
-# Installer les dépendances
-pip install -r requirements.txt
-
-# Démarrer
-python app.py
-
-# Le service IA sera sur http://localhost:5000
-```
-
-#### 4. IoT Service
-
-```bash
-cd iot_service
-
-# Installer les dépendances
-npm install
-
-# Configurer
-cp .env.example .env
-
-# Démarrer
-npm run dev
-
-# Le service IoT sera sur http://localhost:4000
-```
-
-#### 5. Frontend Web
-
-```bash
-cd frontend
-
-# Installer les dépendances
-npm install
-
-# Configurer
-cp .env.example .env.local
-
-# Démarrer
-npm run dev
-
-# L'interface sera sur http://localhost:3001
-```
-
-#### 6. Application Mobile
+### Installation
 
 ```bash
 cd mobile
 
-# Installer les dépendances Flutter
+# Installer les dépendances
 flutter pub get
 
 # Générer les fichiers
 dart run build_runner build --delete-conflicting-outputs
 
-# Lancer l'émulateur Android
-flutter emulators --launch Pixel_7_API_34
-# Ou ouvrir Android Studio > AVD Manager > Start
-
-# Lancer l'application
-flutter run
-
-# Pour iOS (macOS uniquement)
-open -a Simulator
-flutter run -d iPhone
-```
-
-## 📱 Lancer l'Émulateur Mobile
-
-### Android
-
-```bash
-# 1. Lister les émulateurs disponibles
-flutter emulators
-
-# 2. Créer un émulateur (si nécessaire)
-# Ouvrir Android Studio > Tools > Device Manager > Create Device
-# Choisir Pixel 7, API 34
-
-# 3. Lancer l'émulateur
-flutter emulators --launch <emulator_id>
-
-# 4. Vérifier que l'émulateur est détecté
-flutter devices
-
-# 5. Lancer l'app
-cd mobile
+# Lancer sur Android
 flutter run -d emulator-5554
-```
 
-### iOS (macOS uniquement)
-
-```bash
-# 1. Ouvrir le simulateur
-open -a Simulator
-
-# 2. Lancer l'app
-cd mobile
+# Lancer sur iOS (macOS uniquement)
 flutter run -d iPhone
 ```
 
-## 🔗 Configuration des Services
+### Fonctionnalités Mobile
 
-### URLs de Connexion (Développement)
-
-| Depuis | Backend | AI Service |
-|--------|---------|------------|
-| Navigateur | `http://localhost:3000` | `http://localhost:5000` |
-| Émulateur Android | `http://10.0.2.2:3000` | `http://10.0.2.2:5000` |
-| Simulateur iOS | `http://localhost:3000` | `http://localhost:5000` |
-| Appareil physique | `http://<IP_PC>:3000` | `http://<IP_PC>:5000` |
-
-### Fichiers de Configuration
-
-```
-agriculture/
-├── backend/.env              # Config backend
-├── frontend/.env.local       # Config frontend
-├── ai_service/.env           # Config AI
-├── iot_service/.env          # Config IoT
-└── mobile/lib/core/network/api_client.dart  # URL backend mobile
-```
-
-## 📚 Documentation Détaillée
-
-| Service | README | Documentation |
-|---------|--------|---------------|
-| 📦 Backend | [README](backend/README.md) | [Docs](backend/docs/) |
-| 🌐 Frontend | [README](frontend/README.md) | - |
-| 📱 Mobile | [README](mobile/README.md) | - |
-| 🤖 AI Service | [README](ai_service/README.md) | - |
-| 📡 IoT Service | [README](iot_service/README.md) | - |
+- ✅ Authentification avec OTP (mode production) ou directe (développement)
+- ✅ Dashboard avec statistiques agricoles
+- ✅ Gestion des parcelles et plantations
+- ✅ Détection de maladies par caméra
+- ✅ Alertes et notifications push
+- ✅ Marketplace pour acheter/vendre
+- ✅ Formations vidéo
+- ✅ Support multilingue (FR, Baoulé, Malinké, Sénoufo)
 
 ## 🧪 Tests
 
 ```bash
 # Backend
-cd backend && npm test
+docker exec agrismart_api npm test
 
 # Frontend
-cd frontend && npm test
+docker exec agrismart_frontend npm test
 
 # AI Service
-cd ai_service && pytest
+docker exec agrismart_ai pytest
 
 # Mobile
 cd mobile && flutter test
 ```
 
-## 🚀 Déploiement Production
-
-### Avec Docker Compose
+## 📊 Monitoring & Health Checks
 
 ```bash
-# Build et déploiement production
-docker-compose -f docker-compose.prod.yml up -d
+# Vérifier la santé de chaque service
+curl http://localhost:3000/api/v1/health   # Backend
+curl http://localhost:5001/health          # AI Service
+curl http://localhost:4000/health          # IoT Service
 
-# Avec SSL/Nginx
-docker-compose -f docker-compose.prod.yml --profile production up -d
+# Voir les métriques
+docker stats
+```
+
+## 🔐 Sécurité
+
+- ✅ Authentification JWT avec refresh tokens
+- ✅ OTP par SMS (Twilio) en production
+- ✅ Rate limiting sur toutes les routes
+- ✅ Helmet.js pour sécuriser les headers HTTP
+- ✅ CORS configuré
+- ✅ Validation des données avec express-validator
+- ✅ Hashage des mots de passe avec bcrypt (12 rounds)
+- ✅ Environnements isolés Docker
+
+## 🐛 Dépannage
+
+### Les services ne démarrent pas
+
+```bash
+# Vérifier les logs
+docker-compose logs
+
+# Rebuild complet
+docker-compose down
+docker-compose up -d --build
+```
+
+### Le backend ne répond pas
+
+```bash
+# Vérifier que PostgreSQL est healthy
+docker-compose ps postgres
+
+# Redémarrer le backend
+docker-compose restart api
+
+# Voir les logs
+docker logs agrismart_api --tail 50
+```
+
+### L'app mobile ne se connecte pas
+
+1. **Émulateur Android** : Utiliser `http://10.0.2.2:3000`
+2. **Appareil physique** : Utiliser l'IP de votre machine
+3. Vérifier que les services Docker sont accessibles
+4. Vérifier les logs : `flutter run -v`
+
+### Frontend : Erreur 400 pour les alertes
+
+Si vous voyez `GET /api/v1/alertes?status=non_lue 400`, c'est déjà corrigé. Le frontend utilise maintenant `/api/v1/alertes/unread`.
+
+## 🚀 Déploiement Production
+
+### Docker Compose Production
+
+```bash
+# Build pour production
+docker-compose -f docker-compose.prod.yml up -d --build
+
+# Avec reverse proxy Nginx
+docker-compose -f docker-compose.prod.yml --profile nginx up -d
 ```
 
 ### Variables d'Environnement Production
@@ -311,76 +334,80 @@ docker-compose -f docker-compose.prod.yml --profile production up -d
 NODE_ENV=production
 DB_HOST=postgres.agrismart.ci
 REDIS_HOST=redis.agrismart.ci
-INFLUXDB_URL=https://influxdb.agrismart.ci
-```
-
-## 📊 Monitoring
-
-```bash
-# Health checks
-curl http://localhost:3000/api/health   # Backend
-curl http://localhost:5000/health       # AI Service
-curl http://localhost:4000/health       # IoT Service
-```
-
-## 🐛 Dépannage
-
-### Le backend ne démarre pas
-
-```bash
-# Vérifier PostgreSQL
-psql -U postgres -c "SELECT 1"
-
-# Vérifier Redis
-redis-cli ping
-```
-
-### L'émulateur Android ne se connecte pas au backend
-
-1. Utiliser `10.0.2.2` au lieu de `localhost`
-2. Vérifier : `adb reverse tcp:3000 tcp:3000`
-
-### Erreur CORS
-
-Le backend doit autoriser les origines frontend :
-```javascript
-// backend/src/config/cors.js
-origin: ['http://localhost:3001', 'http://10.0.2.2:3001']
+JWT_SECRET=<secret_fort>
+TWILIO_ACCOUNT_SID=<twilio_sid>
+TWILIO_AUTH_TOKEN=<twilio_token>
 ```
 
 ## 📁 Structure du Projet
 
 ```
 agriculture/
-├── backend/           # API REST Node.js
+├── backend/               # API REST Node.js + Socket.IO
 │   ├── src/
-│   ├── docs/
-│   └── README.md
+│   │   ├── config/       # Configuration
+│   │   ├── controllers/  # Contrôleurs
+│   │   ├── middler/      # Middlewares
+│   │   ├── routes/       # Routes API
+│   │   ├── services/     # Services métier
+│   │   └── database/     # Schémas SQL
+│   ├── scripts/          # Scripts utilitaires
+│   └── Dockerfile
 │
-├── frontend/          # Interface Web Next.js
-│   ├── app/
-│   ├── components/
-│   └── README.md
+├── frontend/              # Interface Web Next.js
+│   ├── src/
+│   │   ├── app/          # Pages Next.js
+│   │   ├── components/   # Composants React
+│   │   ├── lib/          # Utilitaires
+│   │   └── styles/       # CSS
+│   └── Dockerfile
 │
-├── mobile/            # App Mobile Flutter
+├── mobile/                # App Mobile Flutter
 │   ├── lib/
+│   │   ├── core/         # Config, réseau, utils
+│   │   ├── features/     # Fonctionnalités
+│   │   └── shared/       # Widgets partagés
 │   ├── android/
-│   ├── ios/
-│   └── README.md
+│   └── ios/
 │
-├── ai_service/        # Service IA Flask
+├── ai_service/            # Service IA Flask
+│   ├── app.py            # Application Flask
+│   ├── models/           # Modèles TensorFlow
+│   ├── requirements.txt
+│   └── Dockerfile
+│
+├── iot_service/           # Gateway IoT
 │   ├── src/
-│   ├── models/
-│   └── README.md
+│   │   ├── mqtt/         # Client MQTT
+│   │   ├── influxdb/     # Client InfluxDB
+│   │   └── server.js
+│   └── Dockerfile
 │
-├── iot_service/       # Gateway IoT
-│   ├── src/
-│   └── README.md
-│
-├── docker-compose.yml
-├── docker-compose.prod.yml
-└── README.md          # Ce fichier
+├── docker-compose.yml     # Configuration Docker (DEV)
+├── DEMARRAGE_SERVICES.md  # Guide de démarrage
+└── README.md              # Ce fichier
 ```
+
+## 🆕 Changements Récents
+
+### v1.2.0 (Décembre 2024)
+
+#### Corrections Critiques
+
+- ✅ **AI Service** : Port changé de 5000 → 5001 (conflit macOS AirPlay)
+- ✅ **AI Service** : Ajout de `gunicorn` dans requirements.txt
+- ✅ **Frontend** : Correction du build Docker et permissions fichiers
+- ✅ **Backend** : Correction de l'API registration route (`/api/v1/auth/register`)
+- ✅ **Frontend** : Correction des alertes (utilisation de `/alertes/unread` au lieu de status enum invalide)
+
+#### Améliorations
+
+- ✅ Création de compte test automatique (`0700000001`)
+- ✅ Amélioration de la page de connexion avec gestion d'erreurs
+- ✅ Suppression des identifiants demo visibles sur la page login
+- ✅ Création de la page "Mot de passe oublié"
+- ✅ Documentation complète de démarrage (DEMARRAGE_SERVICES.md)
+- ✅ Ajout du champ `lu_at` dans l'interface Alerte TypeScript
 
 ## 🤝 Contribution
 
@@ -399,13 +426,14 @@ Ce projet est sous licence MIT. Voir [LICENSE](LICENSE) pour plus de détails.
 - **Développement** : Équipe AgriSmart CI
 - **Design** : UX/UI Team
 - **DevOps** : Infrastructure Team
+- **IA/ML** : Data Science Team
 
 ## 📞 Support
 
-- 📧 Email : support@agrismart.ci
-- 📚 Documentation : https://docs.agrismart.ci
-- 🐛 Issues : https://github.com/agrismart/agriculture/issues
-- 💬 Discord : https://discord.gg/agrismart
+- 📧 Email : <support@agrismart.ci>
+- 📚 Documentation : <https://docs.agrismart.ci>
+- 🐛 Issues : <https://github.com/agrismart/agriculture/issues>
+- 💬 Discord : <https://discord.gg/agrismart>
 
 ---
 

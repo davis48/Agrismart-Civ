@@ -134,13 +134,16 @@ class ProfilePage extends StatelessWidget {
                     context,
                     icon: Icons.analytics,
                     title: 'Mes statistiques',
-                    onTap: () => context.push('/analytics'),
+                    onTap: () => context.pushNamed('analytics'),
                   ),
                   _buildMenuItem(
                     context,
                     icon: Icons.history,
                     title: 'Historique diagnostics',
-                    onTap: () {},
+                    onTap: () {
+                      print("DEBUG: Tap Historique diagnostics");
+                      context.push('/diagnostic-history');
+                    },
                   ),
                 ],
               ),
@@ -161,7 +164,10 @@ class ProfilePage extends StatelessWidget {
                     context,
                     icon: Icons.shopping_bag,
                     title: 'Mes commandes',
-                    onTap: () {},
+                    onTap: () {
+                      print("DEBUG: Tap Mes commandes");
+                      context.push('/orders');
+                    },
                   ),
                   _buildMenuItem(
                     context,
@@ -182,13 +188,19 @@ class ProfilePage extends StatelessWidget {
                     context,
                     icon: Icons.help_outline,
                     title: 'Aide et support',
-                    onTap: () {},
+                    onTap: () {
+                      print("DEBUG: Tap Aide et support");
+                      context.push('/support');
+                    },
                   ),
                   _buildMenuItem(
                     context,
                     icon: Icons.info_outline,
                     title: 'À propos',
-                    onTap: () {},
+                    onTap: () {
+                      print("DEBUG: Tap A propos");
+                      context.push('/about');
+                    },
                   ),
                   _buildMenuItem(
                     context,

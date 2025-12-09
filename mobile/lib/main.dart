@@ -19,6 +19,18 @@ import 'features/settings/presentation/pages/settings_page.dart';
 import 'features/analytics/presentation/pages/analytics_page.dart';
 import 'features/notifications/presentation/pages/notifications_page.dart';
 import 'features/recommandations/presentation/pages/recommandations_page.dart';
+import 'features/orders/presentation/pages/orders_page.dart';
+import 'features/diagnostic/presentation/pages/diagnostic_history_page.dart';
+import 'features/diagnostic/presentation/pages/diagnostic_detail_page.dart';
+import 'features/support/presentation/pages/support_page.dart';
+import 'features/about/presentation/pages/about_page.dart';
+import 'features/orders/presentation/pages/orders_page.dart';
+import 'features/orders/presentation/pages/order_detail_page.dart';
+import 'features/parcelles/presentation/pages/parcelle_detail_page.dart';
+import 'features/capteurs/presentation/pages/capteur_detail_page.dart';
+import 'features/capteurs/presentation/pages/capteurs_page.dart'; 
+import 'features/parcelles/presentation/pages/parcelles_page.dart'; // Ensure models are available if needed or just use page imports
+
 import 'injection_container.dart' as di;
 
 void main() async {
@@ -98,6 +110,7 @@ final _router = GoRouter(
     // Analytics & Notifications
     GoRoute(
       path: '/analytics',
+      name: 'analytics',
       builder: (context, state) => const AnalyticsPage(),
     ),
     GoRoute(
@@ -107,6 +120,60 @@ final _router = GoRouter(
     GoRoute(
       path: '/recommandations',
       builder: (context, state) => const RecommandationsPage(),
+    ),
+    
+    // Additional pages
+    GoRoute(
+      path: '/orders',
+      name: 'orders',
+      builder: (context, state) => const OrdersPage(),
+    ),
+    GoRoute(
+      path: '/diagnostic-history',
+      name: 'diagnostic-history',
+      builder: (context, state) => const DiagnosticHistoryPage(),
+    ),
+    GoRoute(
+      path: '/support',
+      name: 'support',
+      builder: (context, state) => const SupportPage(),
+    ),
+    GoRoute(
+      path: '/about',
+      name: 'about',
+      builder: (context, state) => const AboutPage(),
+    ),
+    GoRoute(
+      path: '/diagnostic-detail',
+      name: 'diagnostic-detail',
+      builder: (context, state) {
+        final diagnostic = state.extra as Map<String, dynamic>;
+        return DiagnosticDetailPage(diagnostic: diagnostic);
+      },
+    ),
+    GoRoute(
+      path: '/order-detail',
+      name: 'order-detail',
+      builder: (context, state) {
+        final order = state.extra as Map<String, dynamic>;
+        return OrderDetailPage(order: order);
+      },
+    ),
+    GoRoute(
+      path: '/parcelle-detail',
+      name: 'parcelle-detail',
+      builder: (context, state) {
+        final parcelle = state.extra as Parcelle; // Need to import Parcelle model or make dynamic
+        return ParcelleDetailPage(parcelle: parcelle);
+      },
+    ),
+    GoRoute(
+      path: '/capteur-detail',
+      name: 'capteur-detail',
+      builder: (context, state) {
+        final capteur = state.extra as Capteur; // Need Capteur model
+        return CapteurDetailPage(capteur: capteur);
+      },
     ),
   ],
 );
@@ -164,6 +231,48 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.green,
+            brightness: Brightness.dark,
+          ),
+          useMaterial3: true,
+          appBarTheme: const AppBarTheme(
+            centerTitle: true,
+            elevation: 0,
+          ),
+          cardTheme: CardThemeData(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+          inputDecorationTheme: InputDecorationTheme(
+            filled: true,
+            fillColor: Colors.grey.shade900,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade700),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: Colors.grey.shade700),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.green, width: 2),
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        themeMode: ThemeMode.system,
         routerConfig: _router,
       ),
     );

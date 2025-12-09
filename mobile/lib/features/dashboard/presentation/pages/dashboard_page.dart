@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../widgets/sensor_card.dart';
 import '../widgets/weather_widget.dart';
 import '../widgets/alerts_widget.dart';
+import '../../../../shared/widgets/voice_assistant_button.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -103,6 +104,14 @@ class _DashboardPageState extends State<DashboardPage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          VoiceAssistantButton(
+            textToRead: "Bienvenue sur AgriSmart. Vous avez 2 alertes urgentes. Cliquez sur l'icone micro pour parler.",
+            onCommand: (text) {
+              if (text.contains('alerte')) context.push('/notifications');
+              if (text.contains('parcelle')) context.push('/parcelles');
+              if (text.contains('météo')) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Météo: Ensoleillé, 32 degrés')));
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.push('/notifications'),

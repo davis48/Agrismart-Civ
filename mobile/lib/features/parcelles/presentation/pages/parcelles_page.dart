@@ -135,7 +135,7 @@ class _ParcellesPageState extends State<ParcellesPage> {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        onTap: () => context.push('/parcelles/${parcelle.id}'),
+        onTap: () => context.pushNamed('parcelle-detail', extra: parcelle),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),

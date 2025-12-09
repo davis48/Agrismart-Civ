@@ -45,7 +45,7 @@ const config = {
 
   // Twilio (SMS/WhatsApp)
   twilio: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || (process.env.NODE_ENV === 'development' ? 'mock_sid' : undefined),
+    accountSid: process.env.TWILIO_ACCOUNT_SID || (process.env.NODE_ENV === 'development' ? 'AC_mock_sid_for_dev_environment' : undefined),
     authToken: process.env.TWILIO_AUTH_TOKEN || (process.env.NODE_ENV === 'development' ? 'mock_token' : undefined),
     phoneNumber: process.env.TWILIO_PHONE_NUMBER || '+1234567890',
     whatsappNumber: process.env.TWILIO_WHATSAPP_NUMBER

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class CapteursPage extends StatefulWidget {
   const CapteursPage({super.key});
@@ -198,8 +199,11 @@ class _CapteursPageState extends State<CapteursPage> with SingleTickerProviderSt
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+      child: InkWell(
+        onTap: () => context.pushNamed('capteur-detail', extra: capteur),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -320,6 +324,7 @@ class _CapteursPageState extends State<CapteursPage> with SingleTickerProviderSt
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -18,6 +18,8 @@ import 'features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
+import 'core/services/voice_service.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -76,5 +78,8 @@ Future<void> init() async {
   sl.registerLazySingleton<DashboardLocalDataSource>(
     () => DashboardLocalDataSourceImpl(isar: sl()),
   );
+  
+  // Services
+  sl.registerLazySingleton(() => VoiceService());
 }
 
