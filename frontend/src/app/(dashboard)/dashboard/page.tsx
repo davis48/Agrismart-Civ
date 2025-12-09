@@ -103,7 +103,7 @@ export default function DashboardPage() {
   const { user } = useAuthStore()
   const { setParcelles } = useParcellesStore()
   const { alertes, setAlertes, setUnreadCount } = useAlertesStore()
-  
+
   const [stats, setStats] = useState<DashboardStats>({
     totalParcelles: 0,
     totalCapteurs: 0,
@@ -132,19 +132,17 @@ export default function DashboardPage() {
         }
 
         // Fetch alertes
-        const alertesRes = await api.get('/alertes?status=non_lue')
-        if (alertesRes.data.success) {
-          setAlertes(alertesRes.data.data)
-          setUnreadCount(alertesRes.data.data.filter((a: { status: string }) => a.status === 'non_lue').length)
-          setStats(prev => ({ ...prev, alertesActives: alertesRes.data.data.length }))
-        }
+        const alertesRes = await api.get('/alertes/unread')
+        setAlertes(alertesRes.data.data.slice(0, 5))
+        setUnreadCount(alertesRes.data.count)
+        setStats(prev => ({ ...prev, alertesActives: alertesRes.data.data.length }))
       } catch (error) {
         console.error('Error fetching dashboard data:', error)
       } finally {
         setLoading(false)
       }
     }
-    
+
     fetchData()
   }, [setParcelles, setAlertes, setUnreadCount])
 
@@ -285,8 +283,8 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-semibold">Météo</CardTitle>
-            <Link 
-              href="/meteo" 
+            <Link
+              href="/meteo"
               className="text-sm text-green-600 hover:text-green-700 flex items-center"
             >
               Voir détails
@@ -328,7 +326,7 @@ export default function DashboardPage() {
             {/* 5-day forecast */}
             <div className="mt-6 grid grid-cols-5 gap-2">
               {weather.previsions.map((prev, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex flex-col items-center p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
@@ -347,8 +345,8 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-lg font-semibold">Alertes récentes</CardTitle>
-            <Link 
-              href="/alertes" 
+            <Link
+              href="/alertes"
               className="text-sm text-green-600 hover:text-green-700 flex items-center"
             >
               Voir tout
@@ -408,12 +406,12 @@ export default function DashboardPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis dataKey="date" stroke="#6B7280" fontSize={12} />
                   <YAxis stroke="#6B7280" fontSize={12} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
                       border: '1px solid #E5E7EB',
                       borderRadius: '8px',
-                    }} 
+                    }}
                   />
                   <Line
                     type="monotone"
@@ -475,8 +473,8 @@ export default function DashboardPage() {
                 {cultureDistribution.map((culture, index) => (
                   <div key={culture.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="h-3 w-3 rounded-full" 
+                      <div
+                        className="h-3 w-3 rounded-full"
                         style={{ backgroundColor: COLORS[index % COLORS.length] }}
                       />
                       <span className="text-sm text-gray-600">{culture.name}</span>

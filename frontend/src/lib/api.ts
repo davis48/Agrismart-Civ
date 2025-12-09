@@ -32,8 +32,12 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expiré ou invalide
-      if (typeof window !== 'undefined') {
+      // Ne pas rediriger si l'erreur vient de la tentative de connexion elle-même
+      const isAuthRequest = error.config?.url?.includes('/auth/login') ||
+        error.config?.url?.includes('/auth/verify-otp');
+
+      // Token expiré ou invalide (seulement pour les autres requêtes)
+      if (!isAuthRequest && typeof window !== 'undefined') {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         window.location.href = '/login'

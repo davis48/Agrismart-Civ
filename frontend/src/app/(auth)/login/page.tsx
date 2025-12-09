@@ -52,7 +52,7 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       const response = await authApi.login({ telephone: data.telephone, password: data.password })
-      
+
       if (response.data.success) {
         if (response.data.data.requiresOtp) {
           setRequiresOtp(true)
@@ -61,7 +61,7 @@ export default function LoginPage() {
           setDebugMessage('Connexion réussie! Redirection...')
           login(response.data.data.user, response.data.data.token)
           toast.success('Connexion réussie!')
-          
+
           // Rediriger vers le dashboard admin si l'utilisateur est admin
           const userRole = response.data.data.user.role
           if (userRole === 'admin' || userRole === 'super_admin') {
@@ -79,13 +79,13 @@ export default function LoginPage() {
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string }, status?: number } }
       let errorMessage = 'Numéro de téléphone ou mot de passe incorrect'
-      
+
       if (err.response?.status === 401 || err.response?.status === 404) {
         errorMessage = 'Numéro de téléphone ou mot de passe incorrect'
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message
       }
-      
+
       setLoginError(errorMessage)
       setDebugMessage('Erreur: ' + errorMessage)
       toast.error(errorMessage)
@@ -104,7 +104,7 @@ export default function LoginPage() {
     setIsLoading(true)
     try {
       const response = await authApi.verifyOtp({ telephone: getValues('telephone'), otp: otpCode })
-      
+
       if (response.data.success) {
         login(response.data.data.user, response.data.data.token)
         toast.success('Connexion réussie!')
@@ -123,8 +123,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-4">
       {/* Bouton retour accueil */}
-      <Link 
-        href="/" 
+      <Link
+        href="/"
         className="absolute top-4 left-4 flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors"
       >
         <Home className="h-5 w-5" />
@@ -148,8 +148,8 @@ export default function LoginPage() {
             {requiresOtp ? 'Vérification OTP' : 'Connexion'}
           </CardTitle>
           <CardDescription>
-            {requiresOtp 
-              ? 'Entrez le code reçu par SMS' 
+            {requiresOtp
+              ? 'Entrez le code reçu par SMS'
               : 'Connectez-vous à votre compte agriculteur'
             }
           </CardDescription>
@@ -197,8 +197,8 @@ export default function LoginPage() {
                   <input type="checkbox" className="rounded border-gray-300" />
                   <span className="text-gray-600">Se souvenir de moi</span>
                 </label>
-                <Link 
-                  href="/forgot-password" 
+                <Link
+                  href="/forgot-password"
                   className="text-green-600 hover:text-green-700"
                 >
                   Mot de passe oublié?
@@ -223,8 +223,8 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
                 disabled={isLoading}
               >
@@ -241,12 +241,7 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              {/* Info de test */}
-              <div className="mt-4 p-3 bg-gray-100 rounded-lg text-sm text-gray-600">
-                <p className="font-medium mb-1">Compte de test :</p>
-                <p>Téléphone : <code className="bg-gray-200 px-1 rounded">0700000001</code></p>
-                <p>Mot de passe : <code className="bg-gray-200 px-1 rounded">password123</code></p>
-              </div>
+
             </form>
           ) : (
             <form onSubmit={handleOtpSubmit} className="space-y-4">
@@ -266,8 +261,8 @@ export default function LoginPage() {
                 maxLength={6}
               />
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full"
                 disabled={isLoading || otpCode.length !== 6}
               >
@@ -293,8 +288,8 @@ export default function LoginPage() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Pas encore de compte? </span>
-            <Link 
-              href="/register" 
+            <Link
+              href="/register"
               className="text-green-600 hover:text-green-700 font-medium"
             >
               Créer un compte
@@ -303,12 +298,7 @@ export default function LoginPage() {
         </CardContent>
       </Card>
 
-      {/* Demo credentials */}
-      <div className="mt-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200 text-sm text-center max-w-md">
-        <p className="font-medium text-gray-700 mb-2">Compte de démonstration:</p>
-        <p className="text-gray-600">Téléphone: <code className="bg-gray-100 px-2 py-0.5 rounded">+2250707070707</code></p>
-        <p className="text-gray-600">Mot de passe: <code className="bg-gray-100 px-2 py-0.5 rounded">password123</code></p>
-      </div>
+
     </div>
   )
 }

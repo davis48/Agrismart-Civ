@@ -127,7 +127,7 @@ services:
       CORS_ORIGIN: http://localhost:3001,http://localhost:3000
       
       # Services internes
-      AI_SERVICE_URL: http://ai_service:5000
+      AI_SERVICE_URL: http://ai_service:5001
       IOT_SERVICE_URL: http://iot_service:4000
     ports:
       - "3000:3000"
@@ -152,15 +152,15 @@ services:
     restart: unless-stopped
     environment:
       FLASK_ENV: ${NODE_ENV:-production}
-      PORT: 5000
+      PORT: 5001
       MODEL_PATH: /app/models
       USE_GPU: ${USE_GPU:-false}
     ports:
-      - "5000:5000"
+      - "5001:5001"
     volumes:
       - ai_models:/app/models
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -225,9 +225,9 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://localhost:3000/api
+        NEXT_PUBLIC_API_URL: http://localhost:3000/api/v1
         NEXT_PUBLIC_SOCKET_URL: http://localhost:3000
-        NEXT_PUBLIC_AI_SERVICE_URL: http://localhost:5000
+        NEXT_PUBLIC_AI_SERVICE_URL: http://localhost:5001
     container_name: agrismart_frontend
     restart: unless-stopped
     depends_on:

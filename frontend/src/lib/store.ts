@@ -68,6 +68,7 @@ export interface Alerte {
   created_at: string
   parcelle_id?: string
   parcelle_nom?: string
+  lu_at?: string | null
 }
 
 export interface Recommandation {

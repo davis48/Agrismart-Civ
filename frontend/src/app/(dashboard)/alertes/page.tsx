@@ -13,12 +13,12 @@ import {
   Eye,
   Check,
 } from 'lucide-react'
-import { 
-  Card, 
-  CardContent, 
-  Button, 
-  Input, 
-  Badge, 
+import {
+  Card,
+  CardContent,
+  Button,
+  Input,
+  Badge,
   Skeleton,
   Tabs,
   TabsList,
@@ -35,7 +35,7 @@ export default function AlertesPage() {
   const { alertes, setAlertes, markAsRead, setUnreadCount } = useAlertesStore()
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filter, setFilter] = useState<'all' | 'non_lue' | 'lue'>('all')
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all')
   const [markingAsRead, setMarkingAsRead] = useState<string | null>(null)
 
   const fetchAlertes = useCallback(async () => {
@@ -44,7 +44,7 @@ export default function AlertesPage() {
       const response = await api.get('/alertes')
       if (response.data.success) {
         setAlertes(response.data.data)
-        setUnreadCount(response.data.data.filter((a: Alerte) => a.status === 'non_lue').length)
+        setUnreadCount(response.data.data.filter((a: Alerte) => !a.lu_at).length)
       }
     } catch (error) {
       console.error('Error fetching alertes:', error)
@@ -77,7 +77,7 @@ export default function AlertesPage() {
   const handleMarkAllAsRead = async () => {
     try {
       // Mark all unread alerts as read
-      const unreadAlertes = alertes.filter(a => a.status === 'non_lue')
+      const unreadAlertes = alertes.filter(a => !a.lu_at)
       for (const alerte of unreadAlertes) {
         await api.put(`/alertes/${alerte.id}/read`)
         markAsRead(alerte.id)
@@ -132,7 +132,7 @@ export default function AlertesPage() {
     }
   }
 
-  const unreadCount = alertes.filter(a => a.status === 'non_lue').length
+  const unreadCount = alertes.filter(a => !a.lu_at).length
 
   return (
     <div className="space-y-6">
@@ -212,7 +212,7 @@ export default function AlertesPage() {
         <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)} className="w-full sm:w-auto">
           <TabsList>
             <TabsTrigger value="all">Toutes</TabsTrigger>
-            <TabsTrigger value="non_lue">Non lues</TabsTrigger>
+            <TabsTrigger value="unread">Non lues</TabsTrigger>
             <TabsTrigger value="lue">Lues</TabsTrigger>
           </TabsList>
         </Tabs>
@@ -234,7 +234,7 @@ export default function AlertesPage() {
                 {searchQuery ? 'Aucune alerte trouvée' : 'Aucune alerte'}
               </h3>
               <p className="text-gray-500">
-                {searchQuery 
+                {searchQuery
                   ? 'Essayez avec d\'autres termes de recherche'
                   : 'Vous n\'avez aucune alerte pour le moment'
                 }
@@ -243,8 +243,8 @@ export default function AlertesPage() {
           </Card>
         ) : (
           filteredAlertes.map((alerte) => (
-            <Card 
-              key={alerte.id} 
+            <Card
+              key={alerte.id}
               className={cn(
                 "border transition-colors",
                 getAlertBgColor(alerte.niveau, alerte.status)
@@ -255,7 +255,7 @@ export default function AlertesPage() {
                   <div className="shrink-0 mt-1">
                     {getAlertIcon(alerte.niveau)}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className={cn(
@@ -265,11 +265,11 @@ export default function AlertesPage() {
                         {alerte.titre}
                       </h3>
                       {getNiveauBadge(alerte.niveau)}
-                      {alerte.status === 'non_lue' && (
+                      {!alerte.lu_at && (
                         <span className="inline-flex h-2 w-2 rounded-full bg-green-500" />
                       )}
                     </div>
-                    
+
                     <p className={cn(
                       "text-sm mb-2",
                       alerte.status === 'lue' ? 'text-gray-500' : 'text-gray-700'
@@ -294,9 +294,9 @@ export default function AlertesPage() {
                     </div>
                   </div>
 
-                  {alerte.status === 'non_lue' && (
-                    <Button 
-                      variant="ghost" 
+                  {!alerte.lu_at && (
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleMarkAsRead(alerte.id)}
                       disabled={markingAsRead === alerte.id}

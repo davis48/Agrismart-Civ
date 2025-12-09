@@ -30,18 +30,18 @@ COPY . .
 
 # Variables d'environnement
 ENV FLASK_ENV=production
-ENV PORT=5000
+ENV PORT=5001
 ENV PYTHONUNBUFFERED=1
 
 # Créer le dossier models si nécessaire
 RUN mkdir -p /app/models
 
 # Exposer le port
-EXPOSE 5000
+EXPOSE 5001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+    CMD curl -f http://localhost:5001/health || exit 1
 
 # Démarrage avec Gunicorn pour production
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "120", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "2", "--timeout", "120", "app:app"]
